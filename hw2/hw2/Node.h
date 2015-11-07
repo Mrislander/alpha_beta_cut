@@ -19,12 +19,18 @@ private:
     int player;
     int result;
     vector<Node*> children;
+    int alpha;
+    int beta;
     public:
     Node (vector<int> b);
     void addChild(Node *child);
     int checkWin();
     int getPlayer();
     int getResult();
+    int getAlpha();
+    int getBeta();
+    void setAlpha(int);
+    void setBeta(int);
     vector<int> getBoard();
     vector<Node*> getChildren();
 };

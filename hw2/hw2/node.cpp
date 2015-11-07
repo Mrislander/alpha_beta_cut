@@ -16,10 +16,11 @@ using namespace std;
 Node::Node(vector<int> b){
     this->board=b;
     int sum = accumulate(b.begin(),b.end(),0);
-    if (sum<=0)
+    if (sum==0)
     this->player = maxPlayer;
-    else
+    else if(sum>0)
     this->player = minPlayer;
+
     this->result = checkWin();
 }
 void Node::addChild(Node *child){
@@ -68,6 +69,9 @@ int Node:: getPlayer(){return this->player;};
 int Node:: getResult(){return this->result;};
 vector<int> Node:: getBoard(){ return this->board;};
 vector<Node*> Node::getChildren(){return this->children;};
-
+int Node::getAlpha(){return this->alpha;};
+int Node::getBeta(){return this->beta;};
+void Node::setAlpha(int a){this->alpha=a;};
+void Node::setBeta(int b){this->beta=b;};
 
 
