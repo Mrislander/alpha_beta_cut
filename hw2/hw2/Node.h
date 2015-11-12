@@ -19,12 +19,16 @@ private:
     int player;
     int result;
     vector<Node*> children;
+    Node* parents;
     int alpha;
     int beta;
+    int depth;
     public:
     Node (vector<int> b);
     void addChild(Node *child);
+    void addParent(Node *p);
     int checkWin();
+    int findDepth();
     int getPlayer();
     int getResult();
     int getAlpha();
@@ -33,6 +37,8 @@ private:
     void setBeta(int);
     vector<int> getBoard();
     vector<Node*> getChildren();
+    Node* getParents();
+    int getDepth();
 };
 
 

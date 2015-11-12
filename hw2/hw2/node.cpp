@@ -22,11 +22,21 @@ Node::Node(vector<int> b){
     this->player = minPlayer;
 
     this->result = checkWin();
+    
+    this->depth = findDepth();
+    
+    
 }
 void Node::addChild(Node *child){
     this->children.push_back(child);
 }
+void Node::addParent(Node *p){
+    this->parents=p;
+}
+
+
 int Node::checkWin(){
+    
     int result = 0;
     if(player==minPlayer){
         for(int i = 0;i<8;i+=3){
@@ -64,14 +74,21 @@ int Node::checkWin(){
     }
     return result;
 }
-
+int Node::findDepth(){
+    int depth = 0;
+    for(int i:this->board){
+        if(i==0) depth++;
+    }
+    return 9-depth;
+}
 int Node:: getPlayer(){return this->player;};
 int Node:: getResult(){return this->result;};
 vector<int> Node:: getBoard(){ return this->board;};
 vector<Node*> Node::getChildren(){return this->children;};
+Node* Node::getParents(){return this->parents;};
 int Node::getAlpha(){return this->alpha;};
 int Node::getBeta(){return this->beta;};
 void Node::setAlpha(int a){this->alpha=a;};
 void Node::setBeta(int b){this->beta=b;};
-
+int Node::getDepth(){return this->depth;};
 
