@@ -9,6 +9,7 @@
 #include <iostream>
 #include <vector>
 #include <queue>
+#include <algorithm>
 #include "Node.h"
 #include <numeric>
 #define minPlayer 0
@@ -149,7 +150,11 @@ Node* exploreTree(Node &n){
     return root;
 }
 
+
+
+
 int minMax(Node *n){
+     ::count++;
     if(n->getChildren().empty()){
         return n->getResult();
     }
@@ -157,7 +162,7 @@ int minMax(Node *n){
     int player = n->getPlayer();
     int ans = n->getPlayer()==maxPlayer?-1:2;
     for(int i = 0; i<n->getChildren().size();i++){
-         ::count++;
+        
         if(player==minPlayer){
             temp=minMax(n->getChildren()[i]);
             if(ans>temp){
@@ -241,6 +246,7 @@ int alphaBetaKiller(Node *n,int val, int val2,vector<vector<int>> &killerTable){
     int player = n->getPlayer();
     
     //try kill moves
+    
     if(killerTable[n->getDepth()].size()!=0){
         for(int i = 0; i <killerTable[n->getDepth()].size();i++){
             vector<int> b(n->getParents()->getBoard());
@@ -264,11 +270,13 @@ int alphaBetaKiller(Node *n,int val, int val2,vector<vector<int>> &killerTable){
         }
     }
     
-    
     for(int i = 0; i<n->getChildren().size();i++){
         if(alpha >= beta){
             int p=findDiff(n->getParents()->getBoard(),n->getBoard());
+        if(find(killerTable[n->getDepth()].begin(),killerTable[n->getDepth()].end(),p)==killerTable[n->getDepth()].end())
+            {
             killerTable.at(n->getDepth()).push_back(p);
+            }
             printNodeState(n);
             cout<<endl<<endl;
             continue;
@@ -284,7 +292,6 @@ int alphaBetaKiller(Node *n,int val, int val2,vector<vector<int>> &killerTable){
             }
         }
         else{
-            
             temp = alphaBetaKiller(n->getChildren()[i],INT_MIN,beta,killerTable);
             if(temp < beta){
                 beta = temp;
@@ -315,7 +322,8 @@ int alphaBetaKillerRotation(Node *n,int val, int val2,vector<vector<int>> &kille
             }
         }
         if(flag){
-            int ans = n->getResult();
+            //int ans = n->getResult();
+            int ans = n->getPlayer()==maxPlayer?2:-2;
             return ans;
         }
         else{
@@ -354,6 +362,7 @@ int alphaBetaKillerRotation(Node *n,int val, int val2,vector<vector<int>> &kille
     int player = n->getPlayer();
     
     //try kill moves
+    
     if(killerTable[n->getDepth()].size()!=0){
         for(int i = 0; i <killerTable[n->getDepth()].size();i++){
             vector<int> b(n->getParents()->getBoard());
@@ -381,7 +390,10 @@ int alphaBetaKillerRotation(Node *n,int val, int val2,vector<vector<int>> &kille
     for(int i = 0; i<n->getChildren().size();i++){
         if(alpha >= beta){
             int p=findDiff(n->getParents()->getBoard(),n->getBoard());
-            killerTable.at(n->getDepth()).push_back(p);
+        if(find(killerTable[n->getDepth()].begin(),killerTable[n->getDepth()].end(),p)==killerTable[n->getDepth()].end())
+            {
+                killerTable.at(n->getDepth()).push_back(p);
+            }
             printNodeState(n);
             cout<<endl<<endl;
             continue;
@@ -390,6 +402,7 @@ int alphaBetaKillerRotation(Node *n,int val, int val2,vector<vector<int>> &kille
         
         if(player==maxPlayer){
             //find child's value
+        
             temp = alphaBetaKillerRotation(n->getChildren()[i],alpha,INT_MAX,killerTable,r);
             //compare and update the alpha
             if(temp > alpha){
@@ -397,7 +410,7 @@ int alphaBetaKillerRotation(Node *n,int val, int val2,vector<vector<int>> &kille
             }
         }
         else{
-            
+        
             temp = alphaBetaKillerRotation(n->getChildren()[i],INT_MIN,beta,killerTable,r);
             if(temp < beta){
                 beta = temp;
@@ -511,37 +524,29 @@ void swap(int &i,int&j){
 vector<int> rotation(vector<int> b,int degree){
     switch (degree) {
         case 90:
-            swap(b[0],b[6]);
-            swap(b[1],b[3]);
-            swap(b[2],b[0]);
-            swap(b[3],b[7]);
+            swap(b[0],b[2]);
+            swap(b[2],b[8]);
+            swap(b[8],b[6]);
             //swap(b[4],b[4]);
-            swap(b[4],b[1]);
-            swap(b[6],b[8]);
-            swap(b[7],b[5]);
-            swap(b[8],b[2]);
+            swap(b[1],b[5]);
+            swap(b[5],b[7]);
+            swap(b[7],b[3]);
             break;
         case 180:
             swap(b[0],b[8]);
-            swap(b[1],b[7]);
             swap(b[2],b[6]);
+            swap(b[1],b[7]);
             swap(b[3],b[5]);
             //swap(b[4],b[4]);
-            swap(b[4],b[3]);
-            swap(b[6],b[2]);
-            swap(b[7],b[1]);
-            swap(b[8],b[0]);
             break;
         case 270:
-            swap(b[0],b[2]);
-            swap(b[1],b[5]);
-            swap(b[2],b[8]);
-            swap(b[3],b[1]);
+            swap(b[1],b[3]);
+            swap(b[3],b[7]);
+            swap(b[7],b[5]);
             //swap(b[4],b[4]);
-            swap(b[4],b[7]);
-            swap(b[6],b[0]);
-            swap(b[7],b[3]);
-            swap(b[8],b[6]);
+            swap(b[0],b[6]);
+            swap(b[6],b[8]);
+            swap(b[8],b[2]);
             break;
         default:
             break;
