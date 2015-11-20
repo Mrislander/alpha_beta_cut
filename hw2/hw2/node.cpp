@@ -24,6 +24,7 @@ Node::Node(vector<int> b){
     this->result = checkWin();
     
     this->depth = findDepth();
+    this->EP = evaluateEP();
     
     
 }
@@ -81,14 +82,54 @@ int Node::findDepth(){
     }
     return 9-depth;
 }
+int Node::evaluateEP(){
+        int X = 8;
+        int O = 8;
+        
+        for(int i = 0;i<8;i+=3){
+            if(board[i]==-1||board[i+1]==-1||board[i+2] == -1){ //check row
+                X--;
+            }
+        }
+        for(int i = 0;i<3;i++){
+            if(board[i]==-1||board[i+3]==-1||board[i+6] == -1){ //check col
+                X--;
+            }
+        }
+        if(board[0]==-1||board[4]==-1||board[8] == -1) X--;
+        if(board[2]==-1||board[4]==-1||board[6] == -1) X--;
+        
+        
+        
+        
+        for(int i = 0;i<8;i+=3){
+            if(board[i]==1||board[i+1]==1||board[i+2] == 1){ //check row
+                O--;
+            }
+        }
+        for(int i = 0;i<3;i++){
+            if(board[i]==1||board[i+3]==1||board[i+6] == 1){ //check col
+                O--;
+            }
+        }
+        if(board[0]==1||board[4]==1||board[8] == 1) O--;
+        if(board[2]==1||board[4]==1||board[6] == 1) O--;
+        
+        
+        return X-O;
+    }
+
+
+
+
 int Node:: getPlayer(){return this->player;};
 int Node:: getResult(){return this->result;};
 vector<int> Node:: getBoard(){ return this->board;};
-vector<Node*> Node::getChildren(){return this->children;};
+vector<Node*>& Node::getChildren(){return this->children;};
 Node* Node::getParents(){return this->parents;};
 int Node::getAlpha(){return this->alpha;};
 int Node::getBeta(){return this->beta;};
 void Node::setAlpha(int a){this->alpha=a;};
 void Node::setBeta(int b){this->beta=b;};
 int Node::getDepth(){return this->depth;};
-
+int Node:: getEP() const {return this->EP;};

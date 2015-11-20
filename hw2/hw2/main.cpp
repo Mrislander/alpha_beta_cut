@@ -9,6 +9,7 @@
 #include <iostream>
 #include <vector>
 #include <queue>
+#include <utility>
 #include <algorithm>
 #include "Node.h"
 #include <numeric>
@@ -26,20 +27,37 @@ Node* exploreTree(Node &n);
 int minMax(Node *n);
 int alphaBeta(Node *n,int val,int val2);
 int alphaBetaKiller(Node *n,int val, int val2,vector<vector<int>> &k);
-int alphaBetaKillerRotation(Node *n,int val, int val2,vector<vector<int>> &k,vector<vector<vector<int>>> &r);
+int alphaBetaKillerRotation(Node *n,int val, int val2,vector<vector<int>> &k,vector<vector<pair<vector<int>,int>>> &r);
 int findDiff(vector<int> b1,vector<int>b2);
 void printNodeState(Node* n);
 int checkWin(vector<int> board,int player);
 void printNodeState2(vector<int> board,int player);
-void swap(int &i,int&j);
 vector<int> rotation(vector<int> b,int degree);
+
+
+int Heuristic(Node *n,int val, int val2);
+int evaluate(vector<int>);
+
+bool comp(Node const *  n1,Node const * n2){
+    return (n1->getEP()>n2->getEP());
+}
+
+bool comp2(Node const *  n1,Node const * n2){
+    return (n1->getEP()<n2->getEP());
+}
+
 
 int main(int argc, const char * argv[])
 {
+    
+   
+    
+    
+    
     vector<int> b;
     
     vector<vector<int>> killerTable(9);
-    vector<vector<vector<int>>> R(9);
+    vector<vector<pair<vector<int>,int>>> R(9);
     
     if(argc!=2){
         cout<<"\nUsage: "<<argv[0]<<" board state\n"<<endl;
@@ -94,6 +112,17 @@ int main(int argc, const char * argv[])
     cout<<"Beta cuts: "<<::betaCount<<endl;
     cout<<"Rotation invariance invoked:"<<::Rcount<<endl;
     cout<<"--------------------------------------------"<<endl;
+    ::count=0;
+    ::alphaCount=0;
+    ::betaCount=0;
+    cout<<"Running with Heuristic E(P) :"<<endl;
+    res = Heuristic(root,INT_MIN,INT_MAX);
+    cout<<"Game Result:"<<res<<endl;
+    cout<<"Moves considered with alpha-beta pruning:"<<::count<<endl;
+    cout<<"Alpha cuts: "<<::alphaCount<<endl;
+    cout<<"Beta cuts: "<<::betaCount<<endl;
+ 
+    
     return 0;
 }
 
@@ -182,10 +211,11 @@ int minMax(Node *n){
     return  ans;
 }
 int alphaBeta(Node *n,int val, int val2){
-     ::count++;
+    ::count++;
     if(n->getChildren().empty()){
         return n->getResult();
     }
+    
     int alpha = INT_MIN;
     int beta = INT_MAX;
     //inherit alpha beta from parents node
@@ -194,15 +224,18 @@ int alphaBeta(Node *n,int val, int val2){
     int temp=0;
     int player = n->getPlayer();
     for(int i = 0; i<n->getChildren().size();i++){
+       
         if(alpha >= beta){
             printNodeState(n);
             cout<<endl<<endl;
-            continue;
+            if(n->getPlayer()==maxPlayer) return alpha;
+            else return beta;
+           
             
         }
         if(player==maxPlayer){
            //find child's value
-            temp = alphaBeta(n->getChildren()[i],alpha,INT_MAX);
+            temp = alphaBeta(n->getChildren()[i],alpha,beta);
             //compare and update the alpha
             if(temp > alpha){
                 alpha = temp;
@@ -210,7 +243,7 @@ int alphaBeta(Node *n,int val, int val2){
         }
         else{
            
-            temp = alphaBeta(n->getChildren()[i],INT_MIN,beta);
+            temp = alphaBeta(n->getChildren()[i],alpha,beta);
             if(temp < beta){
                 beta = temp;
             }
@@ -244,29 +277,21 @@ int alphaBetaKiller(Node *n,int val, int val2,vector<vector<int>> &killerTable){
     beta  = val2 ==INT_MAX?INT_MAX:val2;
     int temp=0;
     int player = n->getPlayer();
-    
+   
     //try kill moves
     
     if(killerTable[n->getDepth()].size()!=0){
+        int num = 0;
         for(int i = 0; i <killerTable[n->getDepth()].size();i++){
-            vector<int> b(n->getParents()->getBoard());
-            if(b[killerTable.at(n->getDepth()).at(i)]==0){
-               b[killerTable.at(n->getDepth()).at(i)]= n->getParents()->getPlayer()==maxPlayer?1:-1;
+            for(int j = num; j<n->getChildren().size();j++){
+                if(n->getChildren()[j]->getBoard()[killerTable[n->getDepth()][i]]==n->getPlayer()){
+                    iter_swap(n->getChildren().at(j),n->getChildren().at(num));
+                    num++;
+                }
             
-            int res = checkWin(b, n->getPlayer());
-            if(n->getPlayer()==maxPlayer){
-                alpha = res;
             }
-            else {
-                beta  = res;
-            }
-            if(alpha >= beta){
-            int ans = player == maxPlayer?alpha:beta;
-            printNodeState2(b,player);
-            cout<<endl;
-            return  ans;
-            }
-            }
+    
+            
         }
     }
     
@@ -279,20 +304,21 @@ int alphaBetaKiller(Node *n,int val, int val2,vector<vector<int>> &killerTable){
             }
             printNodeState(n);
             cout<<endl<<endl;
-            continue;
+            if(n->getPlayer()==maxPlayer) return alpha;
+            else return beta;
             
         }
      
         if(player==maxPlayer){
             //find child's value
-            temp = alphaBetaKiller(n->getChildren()[i],alpha,INT_MAX,killerTable);
+            temp = alphaBetaKiller(n->getChildren()[i],alpha,beta,killerTable);
             //compare and update the alpha
             if(temp > alpha){
                 alpha = temp;
             }
         }
         else{
-            temp = alphaBetaKiller(n->getChildren()[i],INT_MIN,beta,killerTable);
+            temp = alphaBetaKiller(n->getChildren()[i],alpha,beta,killerTable);
             if(temp < beta){
                 beta = temp;
             }
@@ -303,7 +329,7 @@ int alphaBetaKiller(Node *n,int val, int val2,vector<vector<int>> &killerTable){
     int ans = player == maxPlayer?alpha:beta;
     return  ans;
 }
-int alphaBetaKillerRotation(Node *n,int val, int val2,vector<vector<int>> &killerTable,vector<vector<vector<int>>> &r){
+int alphaBetaKillerRotation(Node *n,int val, int val2,vector<vector<int>> &killerTable,vector<vector<pair<vector<int>,int>>> &r){
     ::count++;
     if(n->getChildren().empty()){
         return n->getResult();
@@ -311,46 +337,25 @@ int alphaBetaKillerRotation(Node *n,int val, int val2,vector<vector<int>> &kille
     //board rotation
     if(r[n->getDepth()].size()!=0){
         bool flag = false;
+        int ans=9;
         for(int i = 0; i<r[n->getDepth()].size();i++){
-            if(r[n->getDepth()][i]!=n->getBoard()){
+            if(r[n->getDepth()][i].first != n->getBoard()){
                 continue;
             }
             else {
                 ::Rcount++;
                 flag = true;
+                ans = r[n->getDepth()][i].second;
                 break;
             }
         }
         if(flag){
-            //int ans = n->getResult();
-            int ans = n->getPlayer()==maxPlayer?2:-2;
             return ans;
         }
-        else{
-            
-            vector<int> b90 = rotation(n->getBoard(),90);
-            vector<int> b180 = rotation(n->getBoard(),180);
-            vector<int> b270 = rotation(n->getBoard(),270);
-            
-            r[n->getDepth()].push_back(n->getBoard());
-            r[n->getDepth()].push_back(b90);
-            r[n->getDepth()].push_back(b180);
-            r[n->getDepth()].push_back(b270);
-        }
+    
       
     }
-    else{
-        
-    vector<int> b90 = rotation(n->getBoard(),90);
-    vector<int> b180 = rotation(n->getBoard(),180);
-    vector<int> b270 = rotation(n->getBoard(),270);
-    
-    r[n->getDepth()].push_back(n->getBoard());
-    r[n->getDepth()].push_back(b90);
-    r[n->getDepth()].push_back(b180);
-    r[n->getDepth()].push_back(b270);
-        
-    }
+ 
     
     
     int alpha = INT_MIN;
@@ -364,46 +369,40 @@ int alphaBetaKillerRotation(Node *n,int val, int val2,vector<vector<int>> &kille
     //try kill moves
     
     if(killerTable[n->getDepth()].size()!=0){
+        int num = 0;
         for(int i = 0; i <killerTable[n->getDepth()].size();i++){
-            vector<int> b(n->getParents()->getBoard());
-            if(b[killerTable.at(n->getDepth()).at(i)]==0){
-                b[killerTable.at(n->getDepth()).at(i)]= n->getParents()->getPlayer()==maxPlayer?1:-1;
+            for(int j = num; j<n->getChildren().size();j++){
+                if(n->getChildren()[j]->getBoard()[killerTable[n->getDepth()][i]]==n->getPlayer()){
+                    iter_swap(n->getChildren().at(j),n->getChildren().at(num));
+                    num++;
+                }
                 
-                int res = checkWin(b, n->getPlayer());
-                if(n->getPlayer()==maxPlayer){
-                    alpha = res;
-                }
-                else {
-                    beta  = res;
-                }
-                if(alpha >= beta){
-                    int ans = player == maxPlayer?alpha:beta;
-                    printNodeState2(b,player);
-                    cout<<endl;
-                    return  ans;
-                }
             }
+            
+            
         }
     }
     
     
     for(int i = 0; i<n->getChildren().size();i++){
         if(alpha >= beta){
-            int p=findDiff(n->getParents()->getBoard(),n->getBoard());
-        if(find(killerTable[n->getDepth()].begin(),killerTable[n->getDepth()].end(),p)==killerTable[n->getDepth()].end())
+             int p=findDiff(n->getParents()->getBoard(),n->getBoard());
+       if(find(killerTable[n->getDepth()].begin(),killerTable[n->getDepth()].end(),p)==killerTable[n->getDepth()].end())
             {
                 killerTable.at(n->getDepth()).push_back(p);
             }
+        
             printNodeState(n);
             cout<<endl<<endl;
-            continue;
+            if(n->getPlayer()==maxPlayer) return alpha;
+            else return beta;
             
         }
         
         if(player==maxPlayer){
             //find child's value
         
-            temp = alphaBetaKillerRotation(n->getChildren()[i],alpha,INT_MAX,killerTable,r);
+            temp = alphaBetaKillerRotation(n->getChildren()[i],alpha,beta,killerTable,r);
             //compare and update the alpha
             if(temp > alpha){
                 alpha = temp;
@@ -411,7 +410,7 @@ int alphaBetaKillerRotation(Node *n,int val, int val2,vector<vector<int>> &kille
         }
         else{
         
-            temp = alphaBetaKillerRotation(n->getChildren()[i],INT_MIN,beta,killerTable,r);
+            temp = alphaBetaKillerRotation(n->getChildren()[i],alpha,beta,killerTable,r);
             if(temp < beta){
                 beta = temp;
             }
@@ -420,6 +419,21 @@ int alphaBetaKillerRotation(Node *n,int val, int val2,vector<vector<int>> &kille
     }
     //return the current node value
     int ans = player == maxPlayer?alpha:beta;
+    
+    
+    
+        
+    vector<int> b90 = rotation(n->getBoard(),90);
+    vector<int> b180 = rotation(n->getBoard(),180);
+    vector<int> b270 = rotation(n->getBoard(),270);
+    
+    r[n->getDepth()].push_back(make_pair(n->getBoard(),ans));
+    r[n->getDepth()].push_back(make_pair(b90,ans));
+    r[n->getDepth()].push_back(make_pair(b180,ans));
+    r[n->getDepth()].push_back(make_pair(b270,ans));
+        
+    
+    
     return  ans;
     
     
@@ -427,6 +441,67 @@ int alphaBetaKillerRotation(Node *n,int val, int val2,vector<vector<int>> &kille
     
 
 }
+
+
+int Heuristic(Node *n,int val, int val2){
+
+    ::count++;
+    
+    if(n->getChildren().empty()){
+        return n->getResult();
+    }
+    else{
+        if(n->getPlayer()==maxPlayer)
+            sort((n->getChildren()).begin(),(n->getChildren()).end(),comp);
+        else
+            sort((n->getChildren()).begin(),(n->getChildren()).end(),comp2);
+    }
+   
+    int alpha = INT_MIN;
+    int beta = INT_MAX;
+    //inherit alpha beta from parents node
+    alpha = val ==INT_MIN?INT_MIN:val;
+    beta  = val2 ==INT_MAX?INT_MAX:val2;
+    int temp;
+    int player = n->getPlayer();
+    vector<int> btemp;
+    for(int i = 0; i<n->getChildren().size();i++){
+        if(alpha >= beta){
+            printNodeState(n);
+            cout<<endl<<endl;
+            if(n->getPlayer()==maxPlayer) return alpha;
+            else return beta;
+            
+            
+        }
+        if(player==maxPlayer){
+            //find child's value
+            temp = Heuristic(n->getChildren()[i],alpha,beta);
+            
+            //compare and update the alpha
+            if(temp > alpha){
+                alpha = temp;
+                
+            }
+        }
+        else{
+            
+            temp = Heuristic(n->getChildren()[i],alpha,beta);
+            if(temp < beta){
+                beta = temp;
+               
+            }
+            
+        }
+    }
+    //return the current node value
+    int ans = player == maxPlayer?alpha:beta;
+    return  ans;
+}
+
+
+
+
 
 int checkWin(vector<int> board,int player){
     
@@ -516,11 +591,7 @@ void printNodeState2(vector<int> board,int player){
     
 }
 
-void swap(int &i,int&j){
-    i = i^j;
-    j = i^j;
-    i = i^j;
-}
+
 vector<int> rotation(vector<int> b,int degree){
     switch (degree) {
         case 90:
@@ -553,4 +624,6 @@ vector<int> rotation(vector<int> b,int degree){
     }
     return b;
 }
+
+
 

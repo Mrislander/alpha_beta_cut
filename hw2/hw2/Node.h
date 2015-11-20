@@ -11,7 +11,6 @@
 #include <vector>
 using namespace std;
 
-class Edge;
 
 class Node{
 private:
@@ -23,7 +22,12 @@ private:
     int alpha;
     int beta;
     int depth;
-    public:
+    int EP; 
+    
+  
+    
+public:
+    
     Node (vector<int> b);
     void addChild(Node *child);
     void addParent(Node *p);
@@ -36,9 +40,11 @@ private:
     void setAlpha(int);
     void setBeta(int);
     vector<int> getBoard();
-    vector<Node*> getChildren();
+    vector<Node*>& getChildren();
     Node* getParents();
     int getDepth();
+    int evaluateEP();
+    int getEP() const ;
 };
 
 
